@@ -1,56 +1,42 @@
+import structlog
 from logging.config import dictConfig
 
 
 def setup_logging(log_level: str = "INFO", json: bool = False) -> None:
-    formatters = {
-        "plain": {
-            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
-        },
-        "access": {
-            # ✅ Исправленный форматтер
-            "format": "%(asctime)s %(levelname)s uvicorn.access %(message)s",
-        },
-        "json": {
-            "format": '{"time":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}',
-        },
-    }
-    dictConfig(
-        {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": formatters,
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "formatter": "json" if json else "plain",
-                },
-                "access": {
-                    "class": "logging.StreamHandler",
-                    "formatter": "access",
-                },
-            },
-            "loggers": {
-                "": {"handlers": ["console"], "level": log_level},
-                "uvicorn": {
-                    "handlers": ["console"],
-                    "level": log_level,
-                    "propagate": False,
-                },
-                "uvicorn.error": {
-                    "handlers": ["console"],
-                    "level": log_level,
-                    "propagate": False,
-                },
-                "uvicorn.access": {
-                    "handlers": ["access"],
-                    "level": log_level,
-                    "propagate": False,
-                },
-                "sqlalchemy": {
-                    "handlers": ["console"],
-                    "level": "WARNING",
-                    "propagate": False,
-                },
-            },
-        }
+    # Настройка structlog
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.UnicodeDecoder(),
+            structlog.processors.JSONRenderer() if json else structlog.dev.ConsoleRenderer(),
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True,
     )
+
+    # Обычная конфигурация logging
+    dictConfig({
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
+        },
+        "loggers": {
+            "": {"handlers": ["console"], "level": log_level},
+            "sqlalchemy": {
+                "handlers": ["console"],
+                "level": "WARNING",
+                "propagate": False,
+            },
+        },
+    })

@@ -26,6 +26,7 @@ class Base(DeclarativeBase):
         TIMESTAMP(timezone=True),
         default=func.now(),
         server_default=func.now(),
+        onupdate=func.now(),
         nullable=False,
     )
     created_at: Mapped[datetime] = mapped_column(

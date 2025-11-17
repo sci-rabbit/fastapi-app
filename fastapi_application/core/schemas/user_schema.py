@@ -14,7 +14,7 @@ class UserCreateForRegistration(BaseModel):
     second_name: str
     username: str
     email: EmailStr
-    password: str
+    password: Annotated[str, MinLen(8), MaxLen(128)]
 
     @field_validator("username", "email", mode="before")
     def lowercase_fields(cls, v):

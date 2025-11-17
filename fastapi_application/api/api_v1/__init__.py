@@ -1,8 +1,13 @@
+from datetime import datetime
+
+from dateutil.tz import UTC
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
+from sqlalchemy import text
 
 from fastapi_application.api.api_v1.views.auth_views import auth_router
 from fastapi_application.api.api_v1.views.category_views import category_router
+from fastapi_application.api.api_v1.views.main_dependencies_for_views import db_session
 from fastapi_application.api.api_v1.views.order_views import order_router
 from fastapi_application.api.api_v1.views.post_views import post_router
 from fastapi_application.api.api_v1.views.product_views import product_router
@@ -25,3 +30,17 @@ router.include_router(order_router)
 router.include_router(product_router)
 router.include_router(category_router)
 router.include_router(auth_router)
+
+
+@router.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now(tz=UTC)}
+
+
+@router.get("/health/db")
+async def db_health_check(session: db_session):
+    try:
+        await session.execute(text("SELECT 1"))
+        return {"database": "healthy"}
+    except Exception as e:
+        return {"database": "unhealthy", "error": str(e)}

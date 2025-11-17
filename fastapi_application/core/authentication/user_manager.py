@@ -1,7 +1,7 @@
-import logging
 import uuid
 from typing import Optional, TYPE_CHECKING
 
+import structlog
 from fastapi_users import (
     BaseUserManager,
     UUIDIDMixin,
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from fastapi import Request, BackgroundTasks
     from fastapi_users.password import PasswordHelperProtocol
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):

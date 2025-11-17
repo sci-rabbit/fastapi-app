@@ -1,7 +1,7 @@
-import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import structlog
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi_cache import FastAPICache
@@ -13,7 +13,7 @@ from error_handlers import register_errors_handlers
 from middleware import CorrelationIdMiddleware
 from redis_conf.redis import set_async_redis_client
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 @asynccontextmanager

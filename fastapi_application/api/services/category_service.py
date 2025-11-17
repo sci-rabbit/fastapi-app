@@ -1,7 +1,5 @@
-import logging
+import structlog
 from uuid import UUID
-
-from fastapi import HTTPException
 from fastapi_pagination import Params, Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,31 +9,26 @@ from fastapi_application.core.schemas.category_schema import (
     CategoryUpdate,
     CategoryUpdatePartial,
 )
-from fastapi_application.api.services.utils import handle_integrity_error
+from fastapi_application.api.services.utils import handle_integrity_error, get_or_404
 from fastapi_application.api.repositories.category_repository import (
     SQLAlchemyCategoryRepository,
 )
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class CategoryService:
-    def __init__(
-        self,
-        category_repo: SQLAlchemyCategoryRepository,
-    ) -> None:
+    def __init__(self, category_repo: SQLAlchemyCategoryRepository) -> None:
         self.category_repo = category_repo
 
     async def create_category(
         self,
         session: AsyncSession,
         category_data: CategoryCreate,
-    ):
+    ) -> Category:
         logger.info(
-            "Create category requested",
-            extra={
-                "category_name": (str(category_data.name)),
-            },
+            "Creating category",
+            category_name=category_data.name,
         )
 
         category_dict = category_data.model_dump()
@@ -47,7 +40,11 @@ class CategoryService:
             message="Category with that name already exists",
         )
 
-        logger.info("Category created", extra={"category_id": str(category.id)})
+        logger.info(
+            "Category created successfully",
+            category_id=str(category.id),
+            category_name=category.name,
+        )
         return category
 
     async def get_category(
@@ -55,9 +52,10 @@ class CategoryService:
         session: AsyncSession,
         category_id: UUID,
     ) -> Category:
+        logger.debug("Fetching category", category_id=str(category_id))
         category = await self.category_repo.get(session, category_id)
-        if category is None:
-            raise HTTPException(status_code=404, detail="Category not found")
+        get_or_404(category)
+        logger.debug("Category fetched successfully", category_id=str(category_id))
         return category
 
     async def get_all_categories(
@@ -66,28 +64,36 @@ class CategoryService:
         limit: int = 50,
         offset: int = 0,
     ) -> list[Category]:
-        return await self.category_repo.get_all(
-            session,
-            limit,
-            offset,
-        )
+        logger.debug("Fetching all categories", limit=limit, offset=offset)
+        categories = await self.category_repo.get_all(session, limit, offset)
+        logger.debug("Fetched categories", count=len(categories))
+        return categories
 
     async def get_many_categories(
         self,
         session: AsyncSession,
         category_ids: list[UUID],
     ) -> list[Category]:
-        return await self.category_repo.get_many(
-            session,
-            category_ids,
+        logger.debug(
+            "Fetching multiple categories",
+            category_ids=[str(cid) for cid in category_ids],
         )
+        categories = await self.category_repo.get_many(session, category_ids)
+        logger.debug("Fetched multiple categories", count=len(categories))
+        return categories
 
     async def get_categories_with_paginated(
         self,
         session: AsyncSession,
         params: Params | None = None,
     ) -> Page[Category]:
-        return await self.category_repo.get_multi_paginated(session, params=params)
+        logger.debug(
+            "Fetching paginated categories",
+            params=params.model_dump() if params else None,
+        )
+        page = await self.category_repo.get_multi_paginated(session, params=params)
+        logger.debug("Paginated categories fetched", total=len(page.items))
+        return page
 
     async def update_category_with_partial(
         self,
@@ -96,8 +102,14 @@ class CategoryService:
         category_upd: CategoryUpdate | CategoryUpdatePartial,
         partial: bool = False,
     ) -> Category:
+        logger.info(
+            "Updating category",
+            category_id=str(category.id),
+            partial_update=partial,
+        )
+
         category_dict = category_upd.model_dump(exclude_unset=partial)
-        return await handle_integrity_error(
+        updated_category = await handle_integrity_error(
             self.category_repo.update_partial,
             session,
             category,
@@ -105,25 +117,32 @@ class CategoryService:
             message="Category with that name already exists",
         )
 
+        logger.info(
+            "Category updated successfully",
+            category_id=str(category.id),
+        )
+        return updated_category
+
     async def delete_category(
         self,
         session: AsyncSession,
         category: Category,
     ) -> None:
-        await self.category_repo.delete(
-            session,
-            category,
-        )
+        logger.warning("Deleting category", category_id=str(category.id))
+        await self.category_repo.delete(session, category)
+        logger.info("Category deleted", category_id=str(category.id))
 
     async def get_category_with_products(
         self,
         session: AsyncSession,
         category_id: UUID,
     ) -> Category:
-        category = await self.category_repo.get_with_products(
-            session,
-            category_id,
+        logger.debug("Fetching category with products", category_id=str(category_id))
+        category = await self.category_repo.get_with_products(session, category_id)
+        get_or_404(category)
+        logger.debug(
+            "Fetched category with products",
+            category_id=str(category.id),
+            product_count=len(category.products) if category.products else 0,
         )
-        if category is None:
-            raise HTTPException(status_code=404, detail="Category not found")
         return category

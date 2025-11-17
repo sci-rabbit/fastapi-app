@@ -6,7 +6,7 @@ from fastapi_application.api.dependencies.authentication.backend import (
 from fastapi_application.core.authentication.fa_users import fastapi_users
 from fastapi_application.core.schemas.auth_schema import UserCreate
 from fastapi_application.core.config import settings
-from fastapi_application.core.schemas import UserSchema
+from fastapi_application.core.schemas.user_schema import UserSchema
 
 auth_router = APIRouter(
     prefix=settings.api.v1.auth,

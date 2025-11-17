@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, APIRouter
+from fastapi_cache.decorator import cache
 from fastapi_pagination import Params
 
 from fastapi_application.core.config import settings
@@ -71,6 +72,7 @@ async def get_orders(
 
 
 @order_router.get("/{order_id}")
+@cache(expire=300)
 async def get_order_by_id(
     session: db_session,
     order_id: UUID,
@@ -142,11 +144,18 @@ async def create_order_with_products(
     session: db_session,
     order_data: OrderCreateWithProducts,
 ) -> OrderSchemaWithProducts:
-    async with session.begin():
+    if not session.in_transaction():
+        async with session.begin():
+            order = await order_service.create_order_with_products(
+                session,
+                order_data,
+            )
+    else:
         order = await order_service.create_order_with_products(
             session,
             order_data,
         )
+
     await session.refresh(order)
     order = await order_service.get_many_orders(
         session,
@@ -208,5 +217,8 @@ async def delete_order(
     session: db_session,
     order: order_dep,
 ) -> None:
-    async with session.begin():
+    if not session.in_transaction():
+        async with session.begin():
+            await order_service.delete_order(session, order)
+    else:
         await order_service.delete_order(session, order)

@@ -2,10 +2,11 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, APIRouter
+from fastapi_cache.decorator import cache
 from fastapi_pagination import Params
 
 from fastapi_application.core.config import settings
-from fastapi_application.core.schemas import UserUpdate, UserUpdatePartial
+from fastapi_application.core.schemas.user_schema import UserUpdate, UserUpdatePartial
 from fastapi_application.core.schemas.user_schema import (
     UserSchema,
     UserCreate,
@@ -56,6 +57,7 @@ async def get_users(
 
 
 @user_router.get("/{user_id}")
+@cache(expire=300)
 async def get_user_by_id(
     session: db_session,
     user_id: UUID,
@@ -84,6 +86,7 @@ async def get_users_by_ids(
 
 
 @user_router.get("/user/{username}")
+@cache(expire=300)
 async def get_user_by_username(
     session: db_session,
     username: str,
@@ -98,6 +101,7 @@ async def get_user_by_username(
 
 
 @user_router.get("/user/mail/{email}")
+@cache(expire=300)
 async def get_user_by_email(
     session: db_session,
     email: str,
@@ -234,5 +238,8 @@ async def delete_user(
     session: db_session,
     user: user_dep,
 ) -> None:
-    async with session.begin():
+    if not session.in_transaction():
+        async with session.begin():
+            await user_service.delete_user(session, user)
+    else:
         await user_service.delete_user(session, user)

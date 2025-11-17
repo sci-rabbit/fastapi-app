@@ -1,10 +1,10 @@
-import logging
+import structlog
 from uuid import UUID
 
-from fastapi import HTTPException
 from fastapi_pagination import Params, Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from fastapi_application.api.services.utils import get_or_404
 from fastapi_application.core.models import Post
 from fastapi_application.core.schemas.post_schema import (
     PostCreate,
@@ -15,8 +15,7 @@ from fastapi_application.api.repositories.post_repository import (
     SQLAlchemyPostRepository,
 )
 
-
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class PostService:
@@ -32,30 +31,46 @@ class PostService:
         post_data: PostCreate,
     ) -> Post:
         logger.info(
-            "Create post requested",
-            extra={
-                "User": (str(post_data.user_id)),
-                "Post Title": (str(post_data.tittle)),
-                "Post Body": (str(post_data.body)),
-            },
+            "Creating post",
+            user_id=str(post_data.user_id),
+            title=post_data.tittle,
         )
 
-        post_dict = post_data.model_dump()
-        post = await self.post_repo.create(
-            session,
-            post_dict,
-        )
-        logger.info("Post created", extra={"post_id": str(post.id)})
-        return post
+        try:
+            post_dict = post_data.model_dump()
+            post = await self.post_repo.create(session, post_dict)
+
+            logger.info(
+                "Post created successfully",
+                post_id=str(post.id),
+                user_id=str(post_data.user_id),
+                title=post_data.tittle,
+            )
+            return post
+
+        except Exception as e:
+            logger.error(
+                "Failed to create post",
+                user_id=str(post_data.user_id),
+                title=post_data.tittle,
+                error=str(e),
+                exc_info=True,
+            )
+            raise
 
     async def get_post(
         self,
         session: AsyncSession,
         post_id: UUID,
     ) -> Post:
+        logger.info("Getting post", post_id=str(post_id))
+
         post = await self.post_repo.get(session, post_id)
-        if post is None:
-            raise HTTPException(status_code=404, detail="Post not found")
+        if not post:
+            logger.warning("Post not found", post_id=str(post_id))
+        get_or_404(post)
+
+        logger.info("Post retrieved successfully", post_id=str(post_id))
         return post
 
     async def get_all_posts(
@@ -64,31 +79,45 @@ class PostService:
         limit: int = 50,
         offset: int = 0,
     ) -> list[Post]:
-        return await self.post_repo.get_all(
-            session,
-            limit,
-            offset,
+        logger.info("Retrieving all posts", limit=limit, offset=offset)
+
+        posts = await self.post_repo.get_all(session, limit, offset)
+
+        logger.info(
+            "Posts retrieved successfully",
+            count=len(posts),
+            limit=limit,
+            offset=offset,
         )
+        return posts
 
     async def get_many_posts(
         self,
         session: AsyncSession,
         post_ids: list[UUID],
     ) -> list[Post]:
-        return await self.post_repo.get_many(
-            session,
-            post_ids,
+        logger.info(
+            "Retrieving multiple posts",
+            post_ids=[str(pid) for pid in post_ids],
         )
+
+        posts = await self.post_repo.get_many(session, post_ids)
+
+        logger.info(
+            "Multiple posts retrieved successfully",
+            retrieved_count=len(posts),
+        )
+        return posts
 
     async def get_posts_with_paginated(
         self,
         session: AsyncSession,
         params: Params | None = None,
     ) -> Page[Post]:
-        return await self.post_repo.get_multi_paginated(
-            session,
-            params=params,
-        )
+        logger.info("Retrieving paginated posts")
+        page = await self.post_repo.get_multi_paginated(session, params=params)
+        logger.info("Paginated posts retrieved", total_items=page.total)
+        return page
 
     async def update_post_with_partial(
         self,
@@ -97,19 +126,29 @@ class PostService:
         post_upd: PostUpdate | PostUpdatePartial,
         partial: bool = False,
     ) -> Post:
-        post_dict = post_upd.model_dump(exclude_unset=partial)
-        return await self.post_repo.update_partial(
-            session,
-            post,
-            post_dict,
+        logger.info(
+            "Updating post",
+            post_id=str(post.id),
+            partial=partial,
         )
+
+        post_dict = post_upd.model_dump(exclude_unset=partial)
+        updated_post = await self.post_repo.update_partial(session, post, post_dict)
+
+        logger.info(
+            "Post updated successfully",
+            post_id=str(updated_post.id),
+            partial=partial,
+        )
+        return updated_post
 
     async def delete_post(
         self,
         session: AsyncSession,
         post: Post,
     ) -> None:
-        await self.post_repo.delete(
-            session,
-            post,
-        )
+        logger.info("Deleting post", post_id=str(post.id))
+
+        await self.post_repo.delete(session, post)
+
+        logger.info("Post deleted successfully", post_id=str(post.id))

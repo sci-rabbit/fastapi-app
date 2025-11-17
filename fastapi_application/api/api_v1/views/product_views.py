@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, APIRouter
+from fastapi_cache.decorator import cache
 from fastapi_pagination import Params
 
 from fastapi_application.core.config import settings
@@ -26,7 +27,12 @@ from fastapi_application.api.repositories.product_repository import (
 
 product_dep = Annotated[
     ProductSchema,
-    Depends(obj_by_id_factory(SQLAlchemyProductRepository(), param_name="product_id")),
+    Depends(
+        obj_by_id_factory(
+            SQLAlchemyProductRepository(),
+            param_name="product_id",
+        )
+    ),
 ]
 
 
@@ -59,6 +65,7 @@ async def get_products(
 
 
 @product_router.get("/{product_id}")
+@cache(expire=300)
 async def get_product_by_id(
     session: db_session,
     product_id: UUID,
@@ -149,5 +156,8 @@ async def delete_order(
     session: db_session,
     product: product_dep,
 ) -> None:
-    async with session.begin():
+    if not session.in_transaction():
+        async with session.begin():
+            await product_service.delete_product(session, product)
+    else:
         await product_service.delete_product(session, product)

@@ -18,11 +18,6 @@ class RunConfig(BaseModel):
 class LoggingConfig(BaseModel):
     level: str = "INFO"
 
-    @property
-    def level_value(self) -> int:
-        return logging.getLevelName(self.level.upper())
-
-
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
     auth: str = "/auth"

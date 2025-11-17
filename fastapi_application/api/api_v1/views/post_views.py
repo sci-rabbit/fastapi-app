@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, APIRouter
+from fastapi_cache.decorator import cache
 from fastapi_pagination import Params
 
 from fastapi_application.core.config import settings
@@ -49,6 +50,7 @@ async def get_posts(
 
 
 @post_router.get("/{post_id}")
+@cache(expire=300)
 async def get_post_by_id(
     session: db_session,
     post_id: UUID,

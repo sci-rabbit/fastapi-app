@@ -24,6 +24,7 @@ dependencies = [
     "pydantic-settings (>=2.11.0,<3.0.0)",
     "orjson (>=3.11.3,<4.0.0)",
     "fastapi-limiter (>=0.1.6,<0.2.0)",
+    "structlog (>=25.4.0,<26.0.0)",
 ]
 
 [tool.poetry]

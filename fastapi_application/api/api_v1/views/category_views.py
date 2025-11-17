@@ -2,6 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, APIRouter
+from fastapi_cache.decorator import cache
 from fastapi_pagination import Params
 
 from fastapi_application.core.config import settings
@@ -53,6 +54,7 @@ async def get_categories(
 
 
 @category_router.get("/{category_id}")
+@cache(expire=300)
 async def get_category_by_id(
     session: db_session,
     category_id: UUID,
@@ -95,6 +97,7 @@ async def get_categories_with_pagination(
 
 
 @category_router.get("/category_with_products/{category_id}")
+@cache(expire=300)
 async def get_category_with_products(
     session: db_session,
     category_id: UUID,
@@ -157,5 +160,14 @@ async def delete_category(
     session: db_session,
     category: category_dep,
 ) -> None:
-    async with session.begin():
-        await category_service.delete_category(session, category)
+    if not session.in_transaction():
+        async with session.begin():
+            await category_service.delete_category(
+                session,
+                category,
+            )
+    else:
+        await category_service.delete_category(
+            session,
+            category,
+        )
