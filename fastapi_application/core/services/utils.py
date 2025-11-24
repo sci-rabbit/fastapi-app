@@ -1,7 +1,7 @@
 import sqlalchemy.exc
 from fastapi import HTTPException
 
-from fastapi_application.api.repositories.base_repository import ModelT
+from fastapi_application.core.repositories.base_repository import ModelT
 
 
 async def handle_integrity_error(

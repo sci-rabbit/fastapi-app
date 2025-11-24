@@ -5,7 +5,7 @@ from fastapi import Path, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_application.core.db import get_session
-from fastapi_application.api.repositories.base_repository import ModelT, BaseRepository
+from fastapi_application.core.repositories.base_repository import ModelT, BaseRepository
 
 
 def obj_by_id_factory(repo: BaseRepository, param_name: str):

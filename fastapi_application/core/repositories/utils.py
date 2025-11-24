@@ -25,7 +25,7 @@ async def get_all_handler(
     return list(res.scalars().all())
 
 
-async def get_handler(
+async def sget_handler(
     model: Type[ModelT],
     session: AsyncSession,
     obj_id: UUID,

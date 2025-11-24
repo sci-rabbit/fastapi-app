@@ -8,8 +8,8 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.engine import Result
 
 from fastapi_application.core.models import Order, OrderProductAssociation, Product
-from fastapi_application.api.repositories.base_repository import BaseRepository
-from fastapi_application.api.repositories.utils import (
+from fastapi_application.core.repositories.base_repository import BaseRepository
+from fastapi_application.core.repositories.utils import (
     get_handler,
     get_multi_paginated_handler,
     update_partial_handler,

@@ -4,14 +4,14 @@ from uuid import UUID
 from fastapi_pagination import Params, Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_application.api.services.utils import get_or_404
+from fastapi_application.core.services.utils import get_or_404
 from fastapi_application.core.models import Post
 from fastapi_application.core.schemas.post_schema import (
     PostCreate,
     PostUpdate,
     PostUpdatePartial,
 )
-from fastapi_application.api.repositories.post_repository import (
+from fastapi_application.core.repositories import (
     SQLAlchemyPostRepository,
 )
 

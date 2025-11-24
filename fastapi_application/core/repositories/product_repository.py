@@ -4,9 +4,9 @@ from uuid import UUID
 from fastapi_pagination import Params, Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_application.core.models import Post
-from fastapi_application.api.repositories.base_repository import BaseRepository
-from fastapi_application.api.repositories.utils import (
+from fastapi_application.core.models import Product
+from fastapi_application.core.repositories.base_repository import BaseRepository
+from fastapi_application.core.repositories.utils import (
     get_all_handler,
     get_handler,
     get_many_handler,
@@ -19,15 +19,15 @@ from fastapi_application.api.repositories.utils import (
 logger = logging.getLogger(__name__)
 
 
-class SQLAlchemyPostRepository(BaseRepository[Post]):
+class SQLAlchemyProductRepository(BaseRepository[Product]):
 
     async def get(
         self,
         session: AsyncSession,
         obj_id: UUID,
-    ) -> Post | None:
+    ) -> Product | None:
         return await get_handler(
-            Post,
+            Product,
             session,
             obj_id,
         )
@@ -37,9 +37,9 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
         session: AsyncSession,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[Post]:
+    ) -> list[Product]:
         return await get_all_handler(
-            Post,
+            Product,
             session,
             limit,
             offset,
@@ -49,9 +49,9 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
         self,
         session: AsyncSession,
         obj_ids: list[UUID],
-    ) -> list[Post]:
+    ) -> list[Product]:
         return await get_many_handler(
-            Post,
+            Product,
             session,
             obj_ids,
         )
@@ -60,9 +60,9 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
         self,
         session: AsyncSession,
         params: Params,
-    ) -> Page[Post]:
+    ) -> Page[Product]:
         return await get_multi_paginated_handler(
-            Post,
+            Product,
             session,
             params,
         )
@@ -71,9 +71,9 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
         self,
         session: AsyncSession,
         obj_data: dict,
-    ) -> Post:
+    ) -> Product:
         return await create_handler(
-            Post,
+            Product,
             session,
             obj_data,
         )
@@ -81,9 +81,9 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
     async def update_partial(
         self,
         session: AsyncSession,
-        obj: Post,
+        obj: Product,
         obj_upd: dict,
-    ) -> Post:
+    ) -> Product:
         return await update_partial_handler(
             session,
             obj,
@@ -93,7 +93,7 @@ class SQLAlchemyPostRepository(BaseRepository[Post]):
     async def delete(
         self,
         session: AsyncSession,
-        obj: Post,
+        obj: Product,
     ) -> None:
         await delete_handler(
             session,

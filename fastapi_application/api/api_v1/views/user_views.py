@@ -14,11 +14,11 @@ from fastapi_application.core.schemas.user_schema import (
     UserSchemaWithOrders,
 )
 
-from fastapi_application.api.services.user_service import UserService
+from fastapi_application.core.services.user_service import UserService
 from fastapi_application.api.api_v1.views.main_dependencies_for_views import db_session
 from fastapi_application.api.api_v1.views.utils import run_crud_action
-from fastapi_application.api.repositories.dependencies import obj_by_id_factory
-from fastapi_application.api.repositories.user_repository import (
+from fastapi_application.core.repositories import obj_by_id_factory
+from fastapi_application.core.repositories import (
     SQLAlchemyUserRepository,
 )
 

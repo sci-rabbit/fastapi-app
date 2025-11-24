@@ -14,10 +14,10 @@ from fastapi_application.core.schemas.order_schema import (
     OrderUpdate,
     OrderUpdatePartial,
 )
-from fastapi_application.api.repositories.order_repository import (
+from fastapi_application.core.repositories.order_repository import (
     SQLAlchemyOrderRepository,
 )
-from fastapi_application.api.repositories.product_repository import (
+from fastapi_application.core.repositories import (
     SQLAlchemyProductRepository,
 )
 

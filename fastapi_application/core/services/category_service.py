@@ -9,8 +9,8 @@ from fastapi_application.core.schemas.category_schema import (
     CategoryUpdate,
     CategoryUpdatePartial,
 )
-from fastapi_application.api.services.utils import handle_integrity_error, get_or_404
-from fastapi_application.api.repositories.category_repository import (
+from fastapi_application.core.services.utils import handle_integrity_error, get_or_404
+from fastapi_application.core.repositories.category_repository import (
     SQLAlchemyCategoryRepository,
 )
 

@@ -2,14 +2,11 @@ import logging
 from uuid import UUID
 
 from fastapi_pagination import Params, Page
-from sqlalchemy import select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from fastapi_application.core.models import Category
-from fastapi_application.api.repositories.base_repository import BaseRepository
-from fastapi_application.api.repositories.utils import (
+from fastapi_application.core.models import Post
+from fastapi_application.core.repositories.base_repository import BaseRepository
+from fastapi_application.core.repositories.utils import (
     get_all_handler,
     get_handler,
     get_many_handler,
@@ -22,15 +19,15 @@ from fastapi_application.api.repositories.utils import (
 logger = logging.getLogger(__name__)
 
 
-class SQLAlchemyCategoryRepository(BaseRepository[Category]):
+class SQLAlchemyPostRepository(BaseRepository[Post]):
 
     async def get(
         self,
         session: AsyncSession,
         obj_id: UUID,
-    ) -> Category | None:
+    ) -> Post | None:
         return await get_handler(
-            Category,
+            Post,
             session,
             obj_id,
         )
@@ -40,9 +37,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
         session: AsyncSession,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[Category]:
+    ) -> list[Post]:
         return await get_all_handler(
-            Category,
+            Post,
             session,
             limit,
             offset,
@@ -52,9 +49,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
         self,
         session: AsyncSession,
         obj_ids: list[UUID],
-    ) -> list[Category]:
+    ) -> list[Post]:
         return await get_many_handler(
-            Category,
+            Post,
             session,
             obj_ids,
         )
@@ -63,9 +60,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
         self,
         session: AsyncSession,
         params: Params,
-    ) -> Page[Category]:
+    ) -> Page[Post]:
         return await get_multi_paginated_handler(
-            Category,
+            Post,
             session,
             params,
         )
@@ -74,9 +71,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
         self,
         session: AsyncSession,
         obj_data: dict,
-    ) -> Category:
+    ) -> Post:
         return await create_handler(
-            Category,
+            Post,
             session,
             obj_data,
         )
@@ -84,9 +81,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
     async def update_partial(
         self,
         session: AsyncSession,
-        obj: Category,
+        obj: Post,
         obj_upd: dict,
-    ) -> Category:
+    ) -> Post:
         return await update_partial_handler(
             session,
             obj,
@@ -96,32 +93,9 @@ class SQLAlchemyCategoryRepository(BaseRepository[Category]):
     async def delete(
         self,
         session: AsyncSession,
-        obj: Category,
+        obj: Post,
     ) -> None:
         await delete_handler(
             session,
             obj,
         )
-
-    async def get_with_products(
-        self,
-        session: AsyncSession,
-        obj_id: UUID,
-    ) -> Category | None:
-        query = (
-            select(Category)
-            .options(selectinload(Category.products))
-            .where(Category.id == obj_id)
-        )
-        result = await session.execute(query)
-        return result.scalars().first()
-
-    async def get_by_name(
-        self,
-        session: AsyncSession,
-        category_name: str,
-    ) -> Category | None:
-        query = select(Category).where(Category.name == category_name)
-        result: Result = await session.execute(query)
-        category = result.scalar_one_or_none()
-        return category

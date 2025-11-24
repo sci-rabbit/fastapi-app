@@ -4,17 +4,17 @@ from uuid import UUID
 from fastapi_pagination import Params, Page
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_application.api.services.utils import get_or_404
+from fastapi_application.core.services.utils import get_or_404
 from fastapi_application.core.models import Product
 from fastapi_application.core.schemas.product_schema import (
     ProductCreate,
     ProductUpdate,
     ProductUpdatePartial,
 )
-from fastapi_application.api.repositories.category_repository import (
+from fastapi_application.core.repositories.category_repository import (
     SQLAlchemyCategoryRepository,
 )
-from fastapi_application.api.repositories.product_repository import (
+from fastapi_application.core.repositories import (
     SQLAlchemyProductRepository,
 )
 

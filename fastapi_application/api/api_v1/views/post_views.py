@@ -13,12 +13,12 @@ from fastapi_application.core.schemas.post_schema import (
     PostUpdatePartial,
 )
 
-from fastapi_application.api.services.post_service import PostService
+from fastapi_application.core.services.post_service import PostService
 from fastapi_application.api.api_v1.views.main_dependencies_for_views import db_session
 from fastapi_application.api.api_v1.views.utils import run_crud_action
 
-from fastapi_application.api.repositories.dependencies import obj_by_id_factory
-from fastapi_application.api.repositories.post_repository import (
+from fastapi_application.core.repositories import obj_by_id_factory
+from fastapi_application.core.repositories import (
     SQLAlchemyPostRepository,
 )
 
